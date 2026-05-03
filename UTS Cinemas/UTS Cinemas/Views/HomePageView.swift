@@ -1,40 +1,29 @@
-//
-//  HomePageView.swift
-//  UTS Cinemas
-//
-//  Created by Jiaming Huang on 1/5/2026.
-//
-
 import SwiftUI
 
 struct HomePageView: View {
-    // Sample data for demo
-    private let nowShowingTitles = [
-        "Dune: Part Two",
-        "Civil War",
-        "Kung Fu Panda 4",
-        "The Fall Guy"
-    ]
-    // Sample data for demo
-    private let upcomingTitles = [
-        "Inside Out 2",
-        "Furiosa",
-        "A Quiet Place: Day One",
-        "Deadpool & Wolverine"
-    ]
+    @StateObject private var movieManager = MovieManager.shared
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    nowShowingSection
-                    upcomingSection
-                    quickActions
+                    if movieManager.isLoading {
+                        ProgressView("Loading movies...")
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
+                    } else {
+                        nowShowingSection
+                        upcomingSection
+                        quickActions
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 16)
             }
             .navigationTitle("UTS Cinemas")
+            .task {
+                await movieManager.fetchMovies()
+            }
         }
     }
 
@@ -45,8 +34,8 @@ struct HomePageView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(nowShowingTitles, id: \.self) { title in
-                        movieCard(title: title)
+                    ForEach(movieManager.nowShowing) { movie in
+                        movieCard(movie: movie)
                     }
                 }
                 .padding(.horizontal, 2)
@@ -61,8 +50,8 @@ struct HomePageView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(upcomingTitles, id: \.self) { title in
-                        movieCard(title: title)
+                    ForEach(movieManager.upcoming) { movie in
+                        movieCard(movie: movie)
                     }
                 }
                 .padding(.horizontal, 2)
@@ -76,8 +65,7 @@ struct HomePageView: View {
             actionCard(title: "My Bookings", systemImage: "ticket")
         }
     }
-    
-    // simplified action card for demo
+
     private func actionCard(title: String, systemImage: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: systemImage)
@@ -93,27 +81,38 @@ struct HomePageView: View {
                 .fill(.gray.opacity(0.15))
         )
     }
-    // simplified movie card for demo
-    private func movieCard(title: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.gray.opacity(0.2))
-                .frame(width: 140, height: 190)
-                .overlay(
-                    Image(systemName: "film")
-                        .font(.title)
-                        .foregroundStyle(.gray)
-                )
 
-            Text(title)
+    private func movieCard(movie: TMDBMovie) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Poster image
+            AsyncImage(url: movie.posterURL) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.gray.opacity(0.2))
+                    .overlay(
+                        ProgressView()
+                    )
+            }
+            .frame(width: 140, height: 190)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            Text(movie.title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(2)
                 .frame(width: 140, alignment: .leading)
 
-            Text("2h 10m • PG")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 4) {
+                Image(systemName: "star.fill")
+                    .foregroundStyle(.yellow)
+                    .font(.caption)
+                Text(movie.formattedRating)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(12)
         .background(
