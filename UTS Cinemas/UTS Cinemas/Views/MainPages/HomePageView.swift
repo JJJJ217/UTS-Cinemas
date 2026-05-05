@@ -29,7 +29,6 @@ struct HomePageView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     nowShowingSection
                     upcomingSection
-                    quickActions
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 16)
@@ -70,29 +69,6 @@ struct HomePageView: View {
         }
     }
 
-    private var quickActions: some View {
-        HStack(spacing: 12) {
-            actionCard(title: "Browse Movies", systemImage: "popcorn")
-            actionCard(title: "My Bookings", systemImage: "ticket")
-        }
-    }
-    
-    // simplified action card for demo
-    private func actionCard(title: String, systemImage: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .font(.title2)
-            Text(title)
-                .font(.subheadline)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.gray.opacity(0.15))
-        )
-    }
     // simplified movie card for demo
     private func movieCard(title: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
