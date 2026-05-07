@@ -17,6 +17,7 @@ struct ProfileView: View {
     @State private var name = ""
     @State private var phoneString = ""
     @State private var address = ""
+    @State private var isAdmin = false
     
     @State private var errorMessage = ""
     
@@ -77,7 +78,6 @@ struct ProfileView: View {
                 .padding(.bottom)
                 .onChange(of: isLoginMode) { _ in
                     clearFields()
-                    
                 }
                 
                 // Text fields for login and registration
@@ -95,16 +95,19 @@ struct ProfileView: View {
                     .textFieldStyle(.roundedBorder)
                     .focused($focusedField, equals: .password)
                 
-                
                 if !isLoginMode {
-                    TextField("Phone (numbers only)", text: $phoneString)
-                        .textFieldStyle(.roundedBorder)
+                    Toggle("Register as Admin", isOn: $isAdmin)
+                        .padding()
                     
-                    
-                    TextField("Address", text: $address)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    
+                    if !isAdmin {
+                        TextField("Phone (numbers only)", text: $phoneString)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .phone)
+                        
+                        TextField("Address", text: $address)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .address)
+                    }
                 }
                 
                 if !errorMessage.isEmpty {
@@ -130,6 +133,8 @@ struct ProfileView: View {
     
     // Authentication handling with error validation
     private func handleAction() {
+        focusedField = nil
+        
         // 1. Email error handling
         guard isValidEmail(email) else {
             errorMessage = "Please enter a valid email address."
@@ -152,19 +157,20 @@ struct ProfileView: View {
             return
         }
         
-        guard let phone = Int(phoneString), isValidPhone(phoneString) else {
-            errorMessage = "Phone number must be numeric and cannot be empty."
-            return
-        }
-        
-        if !authManager.registerCustomer(
-            name: name,
-            email: email,
-            password: password,
-            phone: phone,
-            address: address
-        ) {
-            errorMessage = "Email already in use."
+        // 4. Distinguish between customer and admin role registration
+        if isAdmin {
+            if !authManager.registerAdmin(name: name, email: email, password: password) {
+                errorMessage = "Email already in use."
+            }
+        } else {
+            guard let phone = Int(phoneString), isValidPhone(phoneString) else {
+                errorMessage = "Phone number must be numeric and cannot be empty."
+                return
+            }
+            
+            if !authManager.registerCustomer(name: name, email: email, password: password, phone: phone, address: address) {
+                errorMessage = "Email already in use."
+            }
         }
     }
     
