@@ -22,9 +22,17 @@ struct MovieEditView: View {
     @State private var location = ""
     @State private var showtime = Date()
     
+    @State private var errorMessage: String?
+    
     var body: some View {
         NavigationStack {
             Form {
+                if let errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
+                
                 Section("Details") {
                     TextField("Title", text: $title)
                     TextField("Genre", text: $genre)
@@ -72,6 +80,11 @@ struct MovieEditView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        let now = Date()
+                        guard showtime >= now else {
+                            errorMessage = "Movie showtime must be today or in the future"
+                            return
+                        }
                         save()
                         dismiss()
                     }
@@ -101,12 +114,22 @@ struct MovieEditView: View {
             movie.rating = rating
             movie.description = description
             movie.posterImageName = posterImageName.isEmpty ? "film" : posterImageName
-            movieManager.updateMovie(movie)
             movie.location = location
             movie.showtime = showtime
             
+            movieManager.updateMovie(movie)
+            
         } else {
-            movieManager.createMovie(title: title, genre: genre, durationMinutes: durationMinutes, rating: rating, posterImageName: posterImageName.isEmpty ? "film" : posterImageName, description: description, location: location, showtime: showtime)
+            movieManager.createMovie(
+                title: title,
+                genre: genre,
+                durationMinutes: durationMinutes,
+                rating: rating,
+                posterImageName: posterImageName.isEmpty ? "film" : posterImageName,
+                description: description,
+                location: location,
+                showtime: showtime
+            )
         }
     }
 }

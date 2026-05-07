@@ -29,7 +29,7 @@ struct Booking: Identifiable, Hashable, Codable {
     var id = UUID()
     var movieId: UUID
     var bookedSeatId: UUID
-    var seats: [String]       
+    var seats: [String]
     var customerId: UUID?
     var createdAt = Date()
 }
@@ -40,4 +40,23 @@ enum ContentRating: String, Codable, Hashable {
     case m
     case ma15
     case r18
+}
+
+// Helper to determine if a movie is now showing or upcoming
+extension Movie {
+    static var now: Date { Date() }
+    var isExpired: Bool {
+        showtime < Self.now
+    }
+    var isValidShowtime: Bool {
+        showtime >= Self.now
+    }
+    var isNowShowing: Bool {
+        let cutoff = Calendar.current.date(byAdding: .day, value: 30, to: Self.now)!
+        return isValidShowtime && showtime <= cutoff
+    }
+    var isUpcoming: Bool {
+        let cutoff = Calendar.current.date(byAdding: .day, value: 30, to: Self.now)!
+        return showtime > cutoff
+    }
 }

@@ -67,16 +67,6 @@ struct MyBookingsView: View {
                 }
             }
             .navigationTitle("My Bookings")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        bookingToEdit = nil
-                        showingBookingEdit = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
             .sheet(isPresented: $showingBookingEdit) {
                 BookingEditView(bookingToEdit: bookingToEdit)
             }

@@ -19,12 +19,14 @@ struct HomePageView: View {
     @State private var bookingToEdit: Booking? = nil
     @State private var selectedMovieForBooking: UUID? = nil
     
+    // Movies within a 30 days window are categorised as now showing
     private var nowShowingMovies: [Movie] {
-        movieManager.movies.filter { ($0.showtime) <= Date() }
+        movieManager.movies.filter { $0.isNowShowing }
     }
     
+    // Movies beyond a 30 days window are categorised as upper coming
     private var upcomingMovies: [Movie] {
-        movieManager.movies.filter { ($0.showtime) > Date() }
+        movieManager.movies.filter { $0.isUpcoming }
     }
     
     var body: some View {
@@ -225,8 +227,8 @@ struct HomePageView: View {
                 .foregroundStyle(.secondary)
             
             /* Determine if the movie is upcoming or now showing based on showtime,
-            and adjust button text and style accordingly */
-            let isUpcoming = (movie.showtime) > Date()
+             and adjust button text and style accordingly */
+            let isUpcoming = movie.isUpcoming
             
             Button(isUpcoming ? "Pre-Book" : "Book Now") {
                 selectedMovieForBooking = movie.id
