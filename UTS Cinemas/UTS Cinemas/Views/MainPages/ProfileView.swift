@@ -37,7 +37,7 @@ struct ProfileView: View {
         }
     }
     
-    private func authenticatedView(for user: AppUser) -> some View {
+    private func authenticatedView(for user: any AppUser) -> some View {
         VStack {
             Text(user.name)
                 .font(.title)
@@ -50,7 +50,10 @@ struct ProfileView: View {
                 .font(.headline)
                 .padding(.top, 10)
             
-            Button(action: authManager.logout) {
+            Button(action: {
+                authManager.logout()
+                clearFields()
+            }) {
                 Text("Sign Out")
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -192,6 +195,7 @@ struct ProfileView: View {
         phoneString = ""
         address = ""
         errorMessage = ""
+        focusedField = nil
     }
 }
 

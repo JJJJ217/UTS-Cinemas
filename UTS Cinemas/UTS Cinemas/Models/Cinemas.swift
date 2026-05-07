@@ -14,7 +14,9 @@ struct Movie: Identifiable, Hashable, Codable {
     var durationMinutes: Int
     var rating: ContentRating
     var posterImageName: String
-    var synopsis: String
+    var description: String
+    var location: String
+    var showtime: Date = Date()
 }
 
 struct Cinema: Identifiable, Hashable, Codable {
@@ -23,19 +25,12 @@ struct Cinema: Identifiable, Hashable, Codable {
     var address: String
 }
 
-struct Showtime: Identifiable, Hashable, Codable {
-    var id = UUID()
-    var movieId: UUID
-    var cinemaId: UUID
-    var startTime: Date
-    var price: Decimal
-}
-
 struct Booking: Identifiable, Hashable, Codable {
     var id = UUID()
-    var showtimeId: UUID
+    var movieId: UUID
+    var bookedSeatId: UUID
     var seats: [String]       
-    var customerId: UUID
+    var customerId: UUID?
     var createdAt = Date()
 }
 

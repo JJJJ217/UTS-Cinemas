@@ -8,92 +8,257 @@
 import SwiftUI
 
 struct HomePageView: View {
-    // Sample data for demo
-    private let nowShowingTitles = [
-        "Dune: Part Two",
-        "Civil War",
-        "Kung Fu Panda 4",
-        "The Fall Guy"
-    ]
-    // Sample data for demo
-    private let upcomingTitles = [
-        "Inside Out 2",
-        "Furiosa",
-        "A Quiet Place: Day One",
-        "Deadpool & Wolverine"
-    ]
-
+    @StateObject private var movieManager = MovieManager.shared
+    @StateObject private var authManager = AuthManager.shared
+    @StateObject private var bookingManager = BookingManager.shared
+    
+    @State private var showAddSheet = false
+    @State private var movieToEdit: Movie? = nil
+    
+    @State private var showBookingSheet = false
+    @State private var bookingToEdit: Booking? = nil
+    @State private var selectedMovieForBooking: UUID? = nil
+    
+    private var nowShowingMovies: [Movie] {
+        movieManager.movies.filter { ($0.showtime) <= Date() }
+    }
+    
+    private var upcomingMovies: [Movie] {
+        movieManager.movies.filter { ($0.showtime) > Date() }
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    nowShowingSection
-                    upcomingSection
+                VStack(alignment: .leading) {
+                    Text("UTS Cinemas")
+                        .bold()
+                        .font(.title)
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Spacer()
+                    
+                    if authManager.currentUser?.role == .admin {
+                        adminControls
+                            .padding(.horizontal)
+                    }
+                    
+                    if !nowShowingMovies.isEmpty {
+                        moviesSection(title: "Now Showing", movies: nowShowingMovies)
+                            .padding(.bottom, 12)
+                    }
+                    
+                    if !upcomingMovies.isEmpty {
+                        moviesSection(title: "Upcoming", movies: upcomingMovies)
+                            .padding(.bottom, 12)
+                    }
+                    
+                    bookingsSection
                 }
+                .padding(.vertical)
+                
+            }
+            .sheet(isPresented: $showAddSheet) {
+                MovieEditView()
+            }
+            .sheet(item: $movieToEdit) { movie in
+                MovieEditView(movieToEdit: movie)
+            }
+            .sheet(isPresented: $showBookingSheet) {
+                BookingEditView(bookingToEdit: bookingToEdit)
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { selectedMovieForBooking != nil },
+                set: { if !$0 { selectedMovieForBooking = nil } }
+            )) {
+                if let movieId = selectedMovieForBooking {
+                    NewBookingView(initialMovieId: movieId)
+                }
+            }
+        }
+    }
+    
+    // Admin controls section with add movie button (Only appears when login as admin)
+    private var adminControls: some View {
+        HStack {
+            Text("Admin Controls")
+                .font(.headline)
+            Spacer()
+            Button(action: {
+                showAddSheet = true
+            }) {
+                Label("Add Movie", systemImage: "plus")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(.bottom)
+    }
+    
+    // Bookings section showing user's bookings with edit and delete options
+    private var bookingsSection: some View {
+        VStack(alignment: .leading) {
+            let myBookings = bookingManager.userBookings(customerId: authManager.currentUser?.id)
+            // Only show this section if there are bookings to display
+            if !myBookings.isEmpty {
+                Text("My Bookings")
+                    .font(.headline)
+                    .padding(.horizontal)
+                
+                ForEach(myBookings) { booking in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            // Lookup movie details for this booking
+                            let movie = movieManager.movies.first(where: { $0.id == booking.movieId })
+                            Text(movie?.title ?? "Unknown Movie")
+                                .fontWeight(.semibold)
+                            Text("Seats: \(booking.seats.joined(separator: ", "))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("Location: \(movie?.location ?? "N/A")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            
+                            if let showtime = movie?.showtime {
+                                Text("Showtime: ")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                + Text(showtime, format: .dateTime.month().day().hour().minute())
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Edit") {
+                            bookingToEdit = booking
+                            showBookingSheet = true
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button(role: .destructive) {
+                            bookingManager.deleteBooking(booking)
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+    
+    // Movie section view for both "Now Showing" and "Upcoming" sections
+    private func moviesSection(title: String, movies: [Movie]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
                 .padding(.horizontal)
-                .padding(.vertical, 16)
-            }
-            .navigationTitle("UTS Cinemas")
-        }
-    }
-
-    private var nowShowingSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Now Showing")
-                .font(.headline)
-
+            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(nowShowingTitles, id: \.self) { title in
-                        movieCard(title: title)
+                    ForEach(movies) { movie in
+                        movieCard(movie: movie)
                     }
                 }
-                .padding(.horizontal, 2)
+                .padding(.horizontal, 12)
             }
         }
     }
-
-    private var upcomingSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Upcoming")
-                .font(.headline)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(upcomingTitles, id: \.self) { title in
-                        movieCard(title: title)
-                    }
-                }
-                .padding(.horizontal, 2)
-            }
-        }
-    }
-
-    // simplified movie card for demo
-    private func movieCard(title: String) -> some View {
+    
+    // Detailed movie card view with poster, title, duration, rating, location, showtime and booking/edit options
+    private func movieCard(movie: Movie) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.gray.opacity(0.2))
-                .frame(width: 140, height: 190)
+                .fill(.gray.opacity(0.3))
+                .frame(width: 140, height: 200)
                 .overlay(
-                    Image(systemName: "film")
-                        .font(.title)
-                        .foregroundStyle(.gray)
+                    Group {
+                        /* Check if posterImageName is a URL address,
+                         if so load image from URL,
+                         otherwise treat it as system image name or fallback to default */
+                        if movie.posterImageName.hasPrefix("http"), let url = URL(string: movie.posterImageName) {
+                            AsyncImage(url: url) { phase in
+                                if let image = phase.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } else {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .font(.title)
+                                        .foregroundStyle(.gray)
+                                }
+                            }
+                            .frame(width: 140, height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        } else {
+                            Image(systemName: movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
+                                .font(.title)
+                                .foregroundStyle(.gray)
+                        }
+                    }
                 )
-
-            Text(title)
+            
+            // Display movie title, duration, rating, location and showtime
+            Text(movie.title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(2)
                 .frame(width: 140, alignment: .leading)
-
-            Text("2h 10m • PG")
+            
+            Text("\(movie.durationMinutes)m • \(movie.rating.rawValue.uppercased())")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            
+            Text(movie.location)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            
+            Text(movie.showtime, format: .dateTime.month().day().hour().minute())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            
+            /* Determine if the movie is upcoming or now showing based on showtime,
+            and adjust button text and style accordingly */
+            let isUpcoming = (movie.showtime) > Date()
+            
+            Button(isUpcoming ? "Pre-Book" : "Book Now") {
+                selectedMovieForBooking = movie.id
+            }
+            .tint(isUpcoming ? .orange : .blue)
+            .buttonStyle(.borderedProminent)
+            .font(.caption)
+            .foregroundStyle(.black)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            
+            if authManager.currentUser?.role == .admin {
+                HStack {
+                    Button("Edit") {
+                        movieToEdit = movie
+                    }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
+                    
+                    Button(role: .destructive) {
+                        movieManager.deleteMovie(movie)
+                    } label: {
+                        Text("Delete")
+                    }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
+                }
+            }
         }
-        .padding(12)
+        .padding()
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.ultraThinMaterial)
         )
     }

@@ -12,18 +12,28 @@ enum UserRole: Codable, Hashable {
     case admin
 }
 
-struct Customer: Identifiable, Hashable, Codable {
+protocol AppUser {
+    var id: UUID { get }
+    var name: String { get set }
+    var email: String { get set }
+    var password: String { get set }
+    var role: UserRole { get }
+}
+
+struct Customer: AppUser, Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
     var phone: Int
     var email: String
+    var password: String
     var address: String
     var role: UserRole { .customer }
 }
 
-struct Admin: Identifiable, Hashable, Codable {
+struct Admin: AppUser, Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
     var email: String
+    var password: String
     var role: UserRole { .admin }
 }
