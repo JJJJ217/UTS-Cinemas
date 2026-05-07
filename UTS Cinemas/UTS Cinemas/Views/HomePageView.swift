@@ -35,7 +35,10 @@ struct HomePageView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(movieManager.nowShowing) { movie in
-                        movieCard(movie: movie)
+                        NavigationLink(destination: MovieDetailView(movie: movie)) {
+                            movieCard(movie: movie)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 2)
@@ -51,7 +54,10 @@ struct HomePageView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(movieManager.upcoming) { movie in
-                        movieCard(movie: movie)
+                        NavigationLink(destination: MovieDetailView(movie: movie)) {
+                            movieCard(movie: movie)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 2)
