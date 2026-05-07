@@ -51,7 +51,7 @@ struct MovieEditView: View {
                 }
                 
                 Section("Media") {
-                    TextField("Poster URL or System Name (e.g. film)", text: $posterImageName)
+                    TextField("Poster URL", text: $posterImageName)
                         .autocapitalization(.none)
                 }
                 

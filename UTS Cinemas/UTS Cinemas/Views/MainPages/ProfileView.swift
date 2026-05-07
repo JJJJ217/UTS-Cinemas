@@ -17,7 +17,6 @@ struct ProfileView: View {
     @State private var name = ""
     @State private var phoneString = ""
     @State private var address = ""
-    @State private var isAdmin = false
     
     @State private var errorMessage = ""
     
@@ -95,21 +94,17 @@ struct ProfileView: View {
                 SecureField("Password", text: $password)
                     .textFieldStyle(.roundedBorder)
                     .focused($focusedField, equals: .password)
-             
+                
                 
                 if !isLoginMode {
-                    Toggle("Register as Admin", isOn: $isAdmin)
-                        .padding()
+                    TextField("Phone (numbers only)", text: $phoneString)
+                        .textFieldStyle(.roundedBorder)
                     
-                    if !isAdmin {
-                        TextField("Phone (numbers only)", text: $phoneString)
-                            .textFieldStyle(.roundedBorder)
-                         
-                        
-                        TextField("Address", text: $address)
-                            .textFieldStyle(.roundedBorder)
-                         
-                    }
+                    
+                    TextField("Address", text: $address)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    
                 }
                 
                 if !errorMessage.isEmpty {
@@ -147,7 +142,7 @@ struct ProfileView: View {
             }
             return
         }
-
+        
         // 3. Registration Validation
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         let trimmedPass = password.trimmingCharacters(in: .whitespaces)
@@ -156,21 +151,20 @@ struct ProfileView: View {
             errorMessage = "Name and password cannot be empty."
             return
         }
-
-        // 4. Distinguish between customer and admin role registration
-        if isAdmin {
-            if !authManager.registerAdmin(name: name, email: email, password: password) {
-                errorMessage = "Email already in use."
-            }
-        } else {
-            guard let phone = Int(phoneString), isValidPhone(phoneString) else {
-                errorMessage = "Phone number must be numeric and cannot be empty."
-                return
-            }
-
-            if !authManager.registerCustomer(name: name, email: email, password: password, phone: phone, address: address) {
-                errorMessage = "Email already in use."
-            }
+        
+        guard let phone = Int(phoneString), isValidPhone(phoneString) else {
+            errorMessage = "Phone number must be numeric and cannot be empty."
+            return
+        }
+        
+        if !authManager.registerCustomer(
+            name: name,
+            email: email,
+            password: password,
+            phone: phone,
+            address: address
+        ) {
+            errorMessage = "Email already in use."
         }
     }
     
