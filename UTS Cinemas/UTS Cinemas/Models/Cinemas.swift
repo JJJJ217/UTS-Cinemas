@@ -17,6 +17,7 @@ struct Movie: Identifiable, Hashable, Codable {
     var description: String
     var location: String
     var showtime: Date = Date()
+    var trailerURL: String = ""
 }
 
 struct Cinema: Identifiable, Hashable, Codable {
@@ -59,4 +60,5 @@ extension Movie {
         let cutoff = Calendar.current.date(byAdding: .day, value: 30, to: Self.now)!
         return showtime > cutoff
     }
+    
 }

@@ -64,7 +64,7 @@ struct HomePageView: View {
                 MovieEditView()
             }
             .sheet(item: $movieToEdit) { movie in
-                MovieEditView(movieToEdit: movie)
+                MovieEditView()
             }
             .sheet(isPresented: $showBookingSheet) {
                 BookingEditView(bookingToEdit: bookingToEdit)
@@ -166,7 +166,11 @@ struct HomePageView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(movies) { movie in
-                        movieCard(movie: movie)
+                        
+                        NavigationLink(destination: MovieDetailView(movie: movie)) {
+                            movieCard(movie: movie)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -182,28 +186,11 @@ struct HomePageView: View {
                 .frame(width: 140, height: 200)
                 .overlay(
                     Group {
-                        /* Check if posterImageName is a URL address,
-                         if so load image from URL,
-                         otherwise treat it as system image name or fallback to default */
-                        if movie.posterImageName.hasPrefix("http"), let url = URL(string: movie.posterImageName) {
-                            AsyncImage(url: url) { phase in
-                                if let image = phase.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } else {
-                                    Image(systemName: "exclamationmark.triangle")
-                                        .font(.title)
-                                        .foregroundStyle(.gray)
-                                }
-                            }
+                        Image(movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
+                            .resizable()
+                            .scaledToFill()
                             .frame(width: 140, height: 200)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
-                        } else {
-                            Image(systemName: movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
-                                .font(.title)
-                                .foregroundStyle(.gray)
-                        }
                     }
                 )
             

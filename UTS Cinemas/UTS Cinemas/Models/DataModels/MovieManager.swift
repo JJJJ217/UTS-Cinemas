@@ -14,6 +14,38 @@ class MovieManager: ObservableObject {
     
     @Published var movies: [Movie] = []
     
+    let movieTemplates: [MovieTemplate] = [
+        MovieTemplate(
+            title: "Mario",
+            posterName: "The Super Mario",
+            genre: "Family",
+            duration: 120,
+            rating: .pg,
+            description: "Mario must save the Mushroom Kingdom.",
+            trailerURL: "https://www.youtube.com/watch?v=TnGl01FkMMo"
+        ),
+        
+        MovieTemplate(
+            title: "The Mummy",
+            posterName: "Lee Cronin's The Mummy",
+            genre: "Horror",
+            duration: 180,
+            rating: .r18,
+            description: "An ancient evil awakens beneath the sands.",
+            trailerURL: "https://www.youtube.com/watch?v=IjHgzkQM2Sg"
+        ),
+        
+        MovieTemplate(
+            title: "Goat",
+            posterName: "Goat",
+            genre: "Drama",
+            duration: 110,
+            rating: .m,
+            description: "A dramatic sports journey.",
+            trailerURL: "https://www.youtube.com/watch?v=fGM8cIz8xJ0"
+        )
+    ]
+    
     private let filename = "movies.json"
     
     private var fileURL: URL {
@@ -47,8 +79,30 @@ class MovieManager: ObservableObject {
     }
     
     // Creating a new movie and add it to the movies array, then save the updated movies list
-    func createMovie(title: String, genre: String, durationMinutes: Int, rating: ContentRating, posterImageName: String, description: String, location: String, showtime: Date) {
-        let newMovie = Movie(title: title, genre: genre, durationMinutes: durationMinutes, rating: rating, posterImageName: posterImageName, description: description, location: location, showtime: showtime)
+    func createMovie(
+        title: String,
+        genre: String,
+        durationMinutes: Int,
+        rating: ContentRating,
+        posterImageName: String,
+        description: String,
+        location: String,
+        showtime: Date,
+        trailerURL: String = ""
+    ) {
+        
+        let newMovie = Movie(
+            title: title,
+            genre: genre,
+            durationMinutes: durationMinutes,
+            rating: rating,
+            posterImageName: posterImageName,
+            description: description,
+            location: location,
+            showtime: showtime,
+            trailerURL: trailerURL
+        )
+        
         movies.append(newMovie)
         movies.sort { $0.title < $1.title }
         saveMovies()
