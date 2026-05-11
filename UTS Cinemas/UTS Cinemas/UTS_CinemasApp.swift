@@ -11,7 +11,7 @@ import SwiftUI
 struct UTS_CinemasApp: App {
     var body: some Scene {
         WindowGroup {
-            HomePageView()
+            MainView()
         }
     }
 }
