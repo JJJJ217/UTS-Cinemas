@@ -18,11 +18,11 @@ struct HomePageView: View {
     @State private var selectedMovieForBooking: UUID? = nil
 
     private var nowShowingMovies: [Movie] {
-        movieManager.movies.filter { $0.isNowShowing }
+        movieManager.movies.filter { $0.isNowShowing && !$0.posterImageName.isEmpty }
     }
 
     private var upcomingMovies: [Movie] {
-        movieManager.movies.filter { $0.isUpcoming }
+        movieManager.movies.filter { $0.isUpcoming && !$0.posterImageName.isEmpty }
     }
 
     var body: some View {
