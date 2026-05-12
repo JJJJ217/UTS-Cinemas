@@ -286,7 +286,8 @@ struct PaymentView: View {
             movieId: movieId,
             bookedSeatId: bookedSeatId,
             seats: seats,
-            customerId: customerId
+            customerId: customerId,
+            price: totalPrice
         )
         
         isProcessing = false

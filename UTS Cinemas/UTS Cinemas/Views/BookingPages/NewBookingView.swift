@@ -28,11 +28,24 @@ struct NewBookingView: View {
             VStack(alignment: .leading, spacing: 16) {
                 // Movie Selection (Read-only if pre-selected, or just text)
                 if let movie = movieManager.movies.first(where: { $0.id == selectedMovieId }) {
-                    Text("Booking: \(movie.title)")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    VStack(spacing: 8) {
+                        Text("Booking: \(movie.title)")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.horizontal)
+                        
+                        HStack {
+                            Image(systemName: "mappin.and.ellipse")
+                            Text(movie.location)
+                            Spacer()
+                            Image(systemName: "clock")
+                            Text(movie.showtime, format: .dateTime.hour().minute().day().month())
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                         .padding(.horizontal)
+                    }
                 }
                 
                 // Seat Selection

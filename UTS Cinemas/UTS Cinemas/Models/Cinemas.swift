@@ -33,6 +33,7 @@ struct Booking: Identifiable, Hashable, Codable {
     var seats: [String]
     var customerId: UUID?
     var createdAt = Date()
+    var price: Double
 }
 
 enum ContentRating: String, Codable, Hashable {

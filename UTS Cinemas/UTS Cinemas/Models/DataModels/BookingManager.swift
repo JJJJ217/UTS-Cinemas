@@ -43,8 +43,8 @@ class BookingManager: ObservableObject {
         }
     }
     
-    func createBooking(movieId: UUID, bookedSeatId: UUID, seats: [String], customerId: UUID?) {
-        let newBooking = Booking(movieId: movieId, bookedSeatId: bookedSeatId, seats: seats, customerId: customerId)
+    func createBooking(movieId: UUID, bookedSeatId: UUID, seats: [String], customerId: UUID?, price: Double) {
+        let newBooking = Booking(movieId: movieId, bookedSeatId: bookedSeatId, seats: seats, customerId: customerId, price: price)
         bookings.append(newBooking)
         saveBookings()
     }
@@ -72,5 +72,11 @@ class BookingManager: ObservableObject {
     func bookedSeats(_ bookedSeatId: UUID) -> Set<String> {
         let seats = bookings.filter { $0.bookedSeatId == bookedSeatId }.flatMap { $0.seats }
         return Set(seats)
+    }
+    
+    func cancelBooking(_ booking: Booking) {
+        print("Your refund of $\(booking.price) for booking ID: \(booking.id) has been processed.")
+            bookings.removeAll(where: { $0.id == booking.id })
+            saveBookings()
     }
 }

@@ -205,13 +205,6 @@ struct HomePageView: View {
                         }
                         .buttonStyle(.bordered)
 
-                        Button(role: .destructive) {
-                            bookingManager.deleteBooking(booking)
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.red)
                     }
                     .padding()
                     .background(Color.gray.opacity(0.1))
