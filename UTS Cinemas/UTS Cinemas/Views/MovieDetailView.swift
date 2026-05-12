@@ -5,6 +5,7 @@ struct MovieDetailView: View {
     let isUpcoming: Bool
     @StateObject private var movieManager = MovieManager.shared
     @State private var selectedMovieForBooking: UUID? = nil
+    @State private var detailedMovie: TMDBMovie? = nil
 
     var body: some View {
         ScrollView {
@@ -27,6 +28,8 @@ struct MovieDetailView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
+                    let displayMovie = detailedMovie ?? movie
+
                     HStack(spacing: 16) {
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
@@ -34,7 +37,7 @@ struct MovieDetailView: View {
                             Text(movie.formattedRating)
                                 .fontWeight(.semibold)
                         }
-                        if let runtime = movie.runtime, runtime > 0 {
+                        if let runtime = displayMovie.runtime, runtime > 0 {
                             HStack(spacing: 4) {
                                 Image(systemName: "clock")
                                     .foregroundStyle(.secondary)
@@ -77,6 +80,11 @@ struct MovieDetailView: View {
                 }
                 .padding(20)
             }
+            .task {
+                if detailedMovie == nil {
+                    await fetchDetails()
+                }
+            }
         }
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
@@ -109,5 +117,11 @@ struct MovieDetailView: View {
             movieManager.saveMovies()
             selectedMovieForBooking = newMovie.id
         }
+    }
+
+    private func fetchDetails() async {
+        guard let url = URL(string: "https://api.themoviedb.org/3/movie/\(movie.id)?api_key=\(Key.tmdbAPIKey)") else { return }
+        let (data, _) = try! await URLSession.shared.data(from: url)
+        detailedMovie = try? JSONDecoder().decode(TMDBMovie.self, from: data)
     }
 }
