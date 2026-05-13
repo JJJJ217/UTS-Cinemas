@@ -70,7 +70,11 @@ struct PaymentView: View {
         .padding()
         .navigationTitle("Payment")
         .navigationBarTitleDisplayMode(.inline)
-
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+        }
         .alert("Payment Successful", isPresented: $showSuccessAlert) {
             Button("OK") {
                 dismiss()
@@ -110,10 +114,26 @@ struct PaymentView: View {
                     .foregroundColor(.green)
                     .bold()
             }
-        }
-        .padding()
-    }
-    
+            
+            HStack {
+                Text("Please do not add any real credit card details in this system. ")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+            }
+            .padding(8)
+                   .background(Color.red.opacity(0.1))
+                   .overlay(
+                       RoundedRectangle(cornerRadius: 8)
+                           .stroke(Color.red.opacity(0.4), lineWidth: 1)
+                   )
+                   .cornerRadius(8)
+               }
+               .padding()
+           }
+            
     // This section allows users to select between Apple Pay and Credit Card payment methods.
     private var paymentMethodSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -256,25 +276,56 @@ struct PaymentView: View {
             if selectedPaymentMethod == .applePay {
                 completeBooking()
             } else if selectedPaymentMethod == .creditCard {
-                if validateCreditCard() {
-                    completeBooking()
-                } else {
-                    errorMessage = "Invalid credit card information."
+                if let error = validateCreditCard() {
+                    errorMessage = error
                     isProcessing = false
+                } else {
+                    completeBooking()
                 }
+    
             }
         }
     }
     
     // Validation for credit card fields.
-    private func validateCreditCard() -> Bool {
-        guard !cardholderName.trimmingCharacters(in: .whitespaces).isEmpty,
-              cardNumber.count >= 13,
-              expiryDate.count == 5, expiryDate.contains("/"),
-              cvv.count >= 3 else {
-            return false
+    private func validateCreditCard() -> String? {
+
+        // below, added specific error messages for each scenario
+        let name = cardholderName.trimmingCharacters(in: .whitespaces)
+        if name.isEmpty {
+            return "Cardholder name is empty"
         }
-        return true
+        if name.count < 3 {
+            return "Cardholder name should be at least be 3 letters"
+        }
+
+        if !name.allSatisfy({ $0.isLetter || $0.isWhitespace }) {
+            return "Cardholder name can only contain letters"
+        }
+
+        let numberValid = (13...16).contains(cardNumber.count)
+        if !numberValid {
+            return "Card number must be 13–16 digits"
+        }
+
+        let parts = expiryDate.split(separator: "/")
+        let month = Int(parts.first ?? "") ?? 0
+
+        let expiryValid =
+            parts.count == 2 &&
+            parts[0].count == 2 &&
+            parts[1].count == 2 &&
+            (1...12).contains(month)
+
+        if !expiryValid {
+            return "Expiry must be in the valid MM/YY format"
+        }
+
+        if !(3...4).contains(cvv.count) {
+            return "CVV must be 3–4 digits"
+        }
+
+        return nil
     }
     
     private func completeBooking() {
