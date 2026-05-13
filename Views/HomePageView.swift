@@ -82,7 +82,7 @@ struct HomePageView: View {
                 MovieEditView()
             }
             .sheet(item: $movieToEdit) { movie in
-                MovieEditView()
+                MovieEditView(movieToEdit: movie)
             }
             .sheet(isPresented: $showBookingSheet) {
                 BookingEditView(bookingToEdit: bookingToEdit)

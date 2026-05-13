@@ -47,11 +47,16 @@ enum ContentRating: String, Codable, Hashable {
 // Helper to determine if a movie is now showing or upcoming
 extension Movie {
     static var now: Date { Date() }
+    
+    var endTime: Date {
+        showtime.addingTimeInterval(Double(durationMinutes) * 60)
+    }
+    
     var isExpired: Bool {
-        showtime < Self.now
+        endTime < Self.now
     }
     var isValidShowtime: Bool {
-        showtime >= Self.now
+        endTime >= Self.now
     }
     var isNowShowing: Bool {
         let cutoff = Calendar.current.date(byAdding: .day, value: 30, to: Self.now)!

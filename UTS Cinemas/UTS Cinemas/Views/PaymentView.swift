@@ -70,11 +70,7 @@ struct PaymentView: View {
         .padding()
         .navigationTitle("Payment")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-        }
+
         .alert("Payment Successful", isPresented: $showSuccessAlert) {
             Button("OK") {
                 dismiss()
