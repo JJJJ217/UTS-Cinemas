@@ -29,11 +29,27 @@ struct HomePageView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text("UTS Cinemas")
-                        .bold()
-                        .font(.title)
-                        .padding(.horizontal)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    ZStack {
+                        Text("UTS Cinemas")
+                            .bold()
+                            .font(.title)
+                        
+                        HStack {
+                            Spacer()
+                            Button {
+                                let email = "support@utscinemas.com"
+                                if let url = URL(string: "mailto:\(email)") {
+                                    UIApplication.shared.open(url)
+                                }
+                            } label: {
+                                Image(systemName: "envelope.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
                     Spacer()
 
