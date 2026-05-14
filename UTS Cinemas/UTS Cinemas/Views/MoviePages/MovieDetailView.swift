@@ -1,5 +1,6 @@
 import SwiftUI
 
+// Movie details page
 struct MovieDetailView: View {
     let movie: TMDBMovie
     let isUpcoming: Bool
@@ -8,6 +9,7 @@ struct MovieDetailView: View {
     @State private var detailedMovie: TMDBMovie? = nil
     @State private var selectedShowtime: Date? = nil
 
+    // Creates today's showtimes
     private var todayShowtimes: [Date] {
         let calendar = Calendar.current
         let now = Date()
@@ -17,7 +19,8 @@ struct MovieDetailView: View {
             return date.flatMap { $0 > now ? $0 : nil }
         }
     }
-
+    
+    // Creates tomorrow's showtimes
     private var tomorrowShowtimes: [Date] {
         let calendar = Calendar.current
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date())!
@@ -27,6 +30,7 @@ struct MovieDetailView: View {
         }
     }
 
+    // Formats showtimes
     private let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "h:mm a"
@@ -36,6 +40,8 @@ struct MovieDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                
+                // Movie poster
                 AsyncImage(url: movie.posterURL) { image in
                     image
                         .resizable()
@@ -50,13 +56,18 @@ struct MovieDetailView: View {
                 .clipped()
 
                 VStack(alignment: .leading, spacing: 16) {
+                    
+                    // Movie title
                     Text(movie.title)
                         .font(.title)
                         .fontWeight(.bold)
 
                     let displayMovie = detailedMovie ?? movie
 
+                    // Movie information
                     HStack(spacing: 16) {
+                        
+                        // Movie rating
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
                                 .foregroundStyle(.yellow)
@@ -64,6 +75,8 @@ struct MovieDetailView: View {
                                 .fontWeight(.semibold)
                         }
                         if let runtime = displayMovie.runtime, runtime > 0 {
+                            
+                            // Movie runtime
                             HStack(spacing: 4) {
                                 Image(systemName: "clock")
                                     .foregroundStyle(.secondary)
@@ -71,13 +84,16 @@ struct MovieDetailView: View {
                                     .foregroundStyle(.secondary)
                             }
                         }
+                        
+                        // Movie release year
                         Text(movie.releaseDate.prefix(4))
                             .foregroundStyle(.secondary)
                     }
                     .font(.subheadline)
 
                     Divider()
-
+                    
+                    // Movie synopsis
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Synopsis")
                             .font(.headline)
@@ -87,6 +103,7 @@ struct MovieDetailView: View {
                             .lineSpacing(4)
                     }
 
+                    // Showtimes section
                     if !isUpcoming {
                         Divider()
 
@@ -94,6 +111,7 @@ struct MovieDetailView: View {
                             Text("Showtimes")
                                 .font(.headline)
 
+                            // Today's showtimes
                             if !todayShowtimes.isEmpty {
                                 Text("Today")
                                     .font(.subheadline)
@@ -107,7 +125,8 @@ struct MovieDetailView: View {
                                     }
                                 }
                             }
-
+                            
+                            // Tomorrow's showtimes
                             Text("Tomorrow")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -121,6 +140,7 @@ struct MovieDetailView: View {
                             }
                         }
 
+                        // Booking button
                         Button {
                             if let showtime = selectedShowtime {
                                 bookTMDBMovie(showtime: showtime)
@@ -142,12 +162,16 @@ struct MovieDetailView: View {
                 }
                 .padding(20)
             }
+            
+            // Fetch movie details
             .task(id: movie.id) {
                 await fetchDetails()
             }
         }
         .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
+        
+        // Opens booking screen
         .fullScreenCover(isPresented: Binding(
             get: { selectedMovieForBooking != nil },
             set: { if !$0 { selectedMovieForBooking = nil } }
@@ -158,6 +182,7 @@ struct MovieDetailView: View {
         }
     }
 
+    // Showtime selection button
     private func showtimeButton(time: Date) -> some View {
         let isSelected = selectedShowtime == time
         return Button {
@@ -177,10 +202,13 @@ struct MovieDetailView: View {
         }
     }
 
+    // Creates or retrieves booking
     private func bookTMDBMovie(showtime: Date) {
         if let existing = movieManager.movies.first(where: { $0.title == movie.title && $0.showtime == showtime }) {
             selectedMovieForBooking = existing.id
         } else {
+            
+            // Create new movie entry
             let newMovie = Movie(
                 title: movie.title,
                 genre: "Now Showing",
@@ -197,7 +225,8 @@ struct MovieDetailView: View {
             selectedMovieForBooking = newMovie.id
         }
     }
-
+    
+    // Fetches movie details from TMDB
     private func fetchDetails() async {
         guard let url = URL(string: "https://api.themoviedb.org/3/movie/\(movie.id)?api_key=\(Key.tmdbAPIKey)") else { return }
         do {

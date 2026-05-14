@@ -6,6 +6,7 @@
 //
 import SwiftUI
 
+// Main homepage displaying movies
 struct HomePageView: View {
     @StateObject private var movieManager = MovieManager.shared
     @StateObject private var authManager = AuthManager.shared
@@ -17,10 +18,12 @@ struct HomePageView: View {
     @State private var bookingToEdit: Booking? = nil
     @State private var selectedMovieForBooking: UUID? = nil
 
+    // Filters now showing movies
     private var nowShowingMovies: [Movie] {
         movieManager.movies.filter { $0.isNowShowing && !$0.posterImageName.isEmpty }
     }
-
+    
+    // Filters upcoming movies
     private var upcomingMovies: [Movie] {
         movieManager.movies.filter { $0.isUpcoming && !$0.posterImageName.isEmpty }
     }
@@ -118,7 +121,8 @@ struct HomePageView: View {
             }
         }
     }
-
+    
+    // TMDB movie card
     private func tmdbMovieCard(movie: TMDBMovie) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             AsyncImage(url: movie.posterURL) { image in
@@ -132,13 +136,15 @@ struct HomePageView: View {
             }
             .frame(width: 140, height: 200)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-
+            
+            // Movie title
             Text(movie.title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(2)
                 .frame(width: 140, alignment: .leading)
-
+            
+            // Movie rating
             HStack(spacing: 4) {
                 Image(systemName: "star.fill")
                     .foregroundStyle(.yellow)
@@ -156,7 +162,7 @@ struct HomePageView: View {
         )
     }
 
-    // Their existing sections below unchanged
+    // Admin controls section
     private var adminControls: some View {
         HStack {
             Text("Admin Controls")
@@ -169,7 +175,8 @@ struct HomePageView: View {
         }
         .padding(.bottom)
     }
-
+    
+    // Display current user's bookings
     private var bookingsSection: some View {
         VStack(alignment: .leading) {
             let myBookings = bookingManager.userBookings(customerId: authManager.currentUser?.id)
@@ -215,7 +222,8 @@ struct HomePageView: View {
             }
         }
     }
-
+    
+    // Local movie section
     private func moviesSection(title: String, movies: [Movie]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
@@ -235,7 +243,8 @@ struct HomePageView: View {
             }
         }
     }
-
+    
+    // Local movie card
     private func movieCard(movie: Movie) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -248,25 +257,30 @@ struct HomePageView: View {
                         .frame(width: 140, height: 200)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 )
-
+            
+            // Movie title
             Text(movie.title)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(2)
                 .frame(width: 140, alignment: .leading)
-
+            
+            // Movie duration and rating
             Text("\(movie.durationMinutes)m • \(movie.rating.rawValue.uppercased())")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-
+            
+            // Movie location
             Text(movie.location)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-
+            
+            // Movie showtime
             Text(movie.showtime, format: .dateTime.month().day().hour().minute())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-
+            
+            
             let isUpcoming = movie.isUpcoming
             Button(isUpcoming ? "Pre-Book" : "Book Now") {
                 selectedMovieForBooking = movie.id
@@ -277,7 +291,8 @@ struct HomePageView: View {
             .foregroundStyle(.black)
             .padding(.top, 8)
             .padding(.bottom, 8)
-
+            
+            // Admin management controls
             if authManager.currentUser?.role == .admin {
                 HStack {
                     Button("Edit") { movieToEdit = movie }
