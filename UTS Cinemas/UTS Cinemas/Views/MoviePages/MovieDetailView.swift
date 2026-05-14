@@ -6,6 +6,32 @@ struct MovieDetailView: View {
     @StateObject private var movieManager = MovieManager.shared
     @State private var selectedMovieForBooking: UUID? = nil
     @State private var detailedMovie: TMDBMovie? = nil
+    @State private var selectedShowtime: Date? = nil
+
+    private var todayShowtimes: [Date] {
+        let calendar = Calendar.current
+        let now = Date()
+        let times = [(18, 15), (21, 30)]
+        return times.compactMap { (hour, minute) in
+            let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: now)
+            return date.flatMap { $0 > now ? $0 : nil }
+        }
+    }
+
+    private var tomorrowShowtimes: [Date] {
+        let calendar = Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date())!
+        let times = [(13, 0), (16, 30), (19, 45), (22, 15)]
+        return times.compactMap { (hour, minute) in
+            calendar.date(bySettingHour: hour, minute: minute, second: 0, of: tomorrow)
+        }
+    }
+
+    private let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f
+    }()
 
     var body: some View {
         ScrollView {
@@ -62,28 +88,62 @@ struct MovieDetailView: View {
                     }
 
                     if !isUpcoming {
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Showtimes")
+                                .font(.headline)
+
+                            if !todayShowtimes.isEmpty {
+                                Text("Today")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(todayShowtimes, id: \.self) { time in
+                                            showtimeButton(time: time)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text("Tomorrow")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(tomorrowShowtimes, id: \.self) { time in
+                                        showtimeButton(time: time)
+                                    }
+                                }
+                            }
+                        }
+
                         Button {
-                            bookTMDBMovie()
+                            if let showtime = selectedShowtime {
+                                bookTMDBMovie(showtime: showtime)
+                            }
                         } label: {
-                            Text("Book Now")
+                            Text("Book Tickets")
                                 .font(.headline)
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
                                 .background(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(.red)
+                                        .fill(selectedShowtime == nil ? .gray : .red)
                                 )
                         }
+                        .disabled(selectedShowtime == nil)
                         .padding(.top, 8)
                     }
                 }
                 .padding(20)
             }
-            .task {
-                if detailedMovie == nil {
-                    await fetchDetails()
-                }
+            .task(id: movie.id) {
+                await fetchDetails()
             }
         }
         .ignoresSafeArea(edges: .top)
@@ -98,19 +158,38 @@ struct MovieDetailView: View {
         }
     }
 
-    private func bookTMDBMovie() {
-        if let existing = movieManager.movies.first(where: { $0.title == movie.title }) {
+    private func showtimeButton(time: Date) -> some View {
+        let isSelected = selectedShowtime == time
+        return Button {
+            selectedShowtime = time
+        } label: {
+            Text(timeFormatter.string(from: time))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? .red : .clear)
+                        .stroke(isSelected ? Color.red : Color.gray.opacity(0.4), lineWidth: 1)
+                )
+                .foregroundStyle(isSelected ? .white : .primary)
+        }
+    }
+
+    private func bookTMDBMovie(showtime: Date) {
+        if let existing = movieManager.movies.first(where: { $0.title == movie.title && $0.showtime == showtime }) {
             selectedMovieForBooking = existing.id
         } else {
             let newMovie = Movie(
                 title: movie.title,
                 genre: "Now Showing",
-                durationMinutes: movie.runtime ?? 120,
+                durationMinutes: detailedMovie?.runtime ?? movie.runtime ?? 120,
                 rating: .m,
                 posterImageName: "",
                 description: movie.overview,
                 location: "UTS Cinemas",
-                showtime: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(),
+                showtime: showtime,
                 trailerURL: ""
             )
             movieManager.movies.append(newMovie)
@@ -121,7 +200,11 @@ struct MovieDetailView: View {
 
     private func fetchDetails() async {
         guard let url = URL(string: "https://api.themoviedb.org/3/movie/\(movie.id)?api_key=\(Key.tmdbAPIKey)") else { return }
-        let (data, _) = try! await URLSession.shared.data(from: url)
-        detailedMovie = try? JSONDecoder().decode(TMDBMovie.self, from: data)
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            detailedMovie = try JSONDecoder().decode(TMDBMovie.self, from: data)
+        } catch {
+            print("Failed to fetch movie details:", error)
+        }
     }
 }
