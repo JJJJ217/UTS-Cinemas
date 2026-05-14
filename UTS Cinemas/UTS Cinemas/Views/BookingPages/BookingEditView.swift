@@ -120,19 +120,25 @@ struct BookingEditView: View {
     
     private var cancelButtonSection: some View {
         Group {
-            if let booking = bookingToEdit {
+            if let booking = bookingToEdit,
+               let movie = movieManager.movies.first(where: { $0.id == booking.movieId }) {
                 Button(role: .destructive) {
                     bookingCancel = true
                 } label: {
                     VStack(spacing: 4) {
                         Text("Cancel Booking")
                             .font(.headline)
+                        if movie.showtime < Date() {
+                            Text("Cannot cancel past bookings")
+                                .font(.caption)
+                        }
                     }
-                    .foregroundColor(.red)
+                    .foregroundColor(movie.showtime < Date() ? .gray : .red)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .background(Color.gray.opacity(0.3))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .disabled(movie.showtime < Date())
                 .padding(.horizontal)
                 .alert("Confirm Cancellation", isPresented: $bookingCancel) {
                     Button("Keep Booking", role: .cancel) { }
