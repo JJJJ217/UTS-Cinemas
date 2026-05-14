@@ -149,6 +149,7 @@ struct HomePageView: View {
             }
         }
         .padding()
+        .frame(width: 164, height: 310)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.ultraThinMaterial)
