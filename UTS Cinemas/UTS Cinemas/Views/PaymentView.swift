@@ -26,11 +26,24 @@ struct PaymentView: View {
     @State private var errorMessage: String?
     
     // State variables for Credit Card Form
+    @State private var emailAddress: String = ""
+    @State private var studentVerified = false
     @State private var cardholderName: String = ""
     @State private var cardNumber: String = ""
     @State private var expiryDate: String = ""
     @State private var cvv: String = ""
     
+    // State variables for Student discount
+    @State private var useStudentDiscount = false
+    @State private var studentEmail: String = ""
+    @State private var studentID: String = ""
+    @State private var universityName: String = ""
+
+    private var finalPrice: Double {
+        (useStudentDiscount && studentVerified) ? totalPrice * 0.5 : totalPrice
+    }
+    
+    // payment methods:
     enum PaymentMethod {
         case applePay
         case creditCard
@@ -42,32 +55,33 @@ struct PaymentView: View {
     }
     
     var body: some View {
-        // This view should rely on the NavigationStack of the parent view that presented it.
-        VStack(spacing: 12) {
-            
-            bookingSummarySection
-            
-            paymentMethodSection
-            
-            if selectedPaymentMethod == .creditCard {
-                creditCardFormSection
+        ScrollView {
+            VStack(spacing: 12) {
+
+                bookingSummarySection
+
+                paymentMethodSection
+
+                studentDiscountSection
+
+                if selectedPaymentMethod == .creditCard {
+                    creditCardFormSection
+                }
+
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                }
+
+                payButton
             }
-            
-            Spacer()
-            
-            if let error = errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(8)
-            }
-            
-            payButton
+            .padding()
         }
-        .padding()
         .navigationTitle("Payment")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -81,7 +95,7 @@ struct PaymentView: View {
                 onPaymentSuccess?()
             }
         } message: {
-            Text("Your booking has been confirmed. Check your bookings for details.")
+            Text("Your booking has been confirmed. You will receive an email confirmation.")
         }
     }
     
@@ -110,7 +124,7 @@ struct PaymentView: View {
             HStack {
                 Text("Total Price:")
                 Spacer()
-                Text("$\(totalPrice, specifier: "%.2f")")
+                Text("$\(finalPrice, specifier: "%.2f")")
                     .foregroundColor(.green)
                     .bold()
             }
@@ -196,41 +210,113 @@ struct PaymentView: View {
         }
     }
     
+      // student discount:
+    // student discount:
+    private var studentDiscountSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Are you a UTS student?")
+                .font(.headline)
+
+            Button(action: {
+                useStudentDiscount.toggle()
+                if !useStudentDiscount {
+                    studentVerified = false
+                    errorMessage = nil
+                }
+            }) {
+                HStack {
+                    Image(systemName: "graduationcap.fill")
+                        .font(.title3)
+
+                    VStack(alignment: .leading) {
+                        Text("Student Discount")
+                            .font(.headline)
+                        Text("50% off (UTS students only)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    if useStudentDiscount && studentVerified {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+                .padding()
+                .background(useStudentDiscount ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(useStudentDiscount ? Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                )
+            }
+            .foregroundStyle(.primary)
+
+            if useStudentDiscount {
+                VStack(spacing: 10) {
+                    TextField("Student Email", text: $studentEmail)
+                        .textFieldStyle(.roundedBorder)
+
+                    TextField("Student ID", text: $studentID)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.numberPad)
+                        .onChange(of: studentID) { newValue in
+                            studentID = String(newValue.filter { $0.isNumber }.prefix(8))
+                        }
+
+                    TextField("University Name", text: $universityName)
+                        .textFieldStyle(.roundedBorder)
+
+                    Button("Verify Student") {
+                        verifyStudent()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+            }
+        }
+    }
+    
+    
     // This section contains the credit card form fields.
     // Only appears when the user selects the Credit Card payment method.
     private var creditCardFormSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            
             TextField("Cardholder Name", text: $cardholderName)
                 .textFieldStyle(.roundedBorder)
             
-            VStack(alignment: .leading, spacing: 4) {
-                TextField("Card Number", text: $cardNumber)
+            TextField("Card Number", text: $cardNumber)
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.numberPad)
+               
+            
+            HStack(spacing: 10) {
+                
+                TextField("MM/YY", text: $expiryDate)
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.numberPad)
-                    .onChange(of: cardNumber) { newValue in
-                        cardNumber = String(newValue.filter { $0.isNumber }.prefix(16))
+                    .onChange(of: expiryDate) { newValue in
+                        formatExpiryDate(newValue)
                     }
                 
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        TextField("MM/YY", text: $expiryDate)
-                            .textFieldStyle(.roundedBorder)
-                            .keyboardType(.numberPad)
-                            .onChange(of: expiryDate) { newValue in
-                                formatExpiryDate(newValue)
-                            }
+                TextField("CVV", text: $cvv)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.numberPad)
+                    .onChange(of: cvv) { newValue in
+                        cvv = String(newValue.filter { $0.isNumber }.prefix(4))
                     }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        TextField("CVV", text: $cvv)
-                            .textFieldStyle(.roundedBorder)
-                            .keyboardType(.numberPad)
-                            .onChange(of: cvv) { newValue in
-                                cvv = String(newValue.filter { $0.isNumber }.prefix(4))
-                            }
-                    }
-                }
             }
+            
+            TextField("Email address (for confirmation)", text: $emailAddress)
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+            
         }
         .padding()
         .background(Color.gray.opacity(0.1))
@@ -243,7 +329,7 @@ struct PaymentView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, minHeight: 50)
             } else {
-                Text("Pay $\(totalPrice, specifier: "%.2f")")
+                Text("Pay $\(finalPrice, specifier: "%.2f")")
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, minHeight: 50)
@@ -287,6 +373,30 @@ struct PaymentView: View {
         }
     }
     
+    //verify if its uts student
+    private func verifyStudent() {
+        let isValidEmail = studentEmail.contains("@student.uts.edu.au")
+        let uni = universityName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        let validUniversities = ["uts", "university of technology sydney"]
+        let isValidUniversity = validUniversities.contains(uni)
+        
+        let isValidStudentID = studentID.count == 8 && studentID.allSatisfy { $0.isNumber }
+        
+        if isValidEmail && isValidStudentID && isValidUniversity {
+            studentVerified = true
+            errorMessage = nil
+        } else {
+            studentVerified = false
+            
+            if !isValidStudentID {
+                errorMessage = "Invalid student ID"
+            } else {
+                errorMessage = "Invalid student details"
+            }
+        }
+    }
+    
     // Validation for credit card fields.
     private func validateCreditCard() -> String? {
 
@@ -324,6 +434,16 @@ struct PaymentView: View {
         if !(3...4).contains(cvv.count) {
             return "CVV must be 3–4 digits"
         }
+        
+        let email = emailAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if email.isEmpty {
+            return "Email is required"
+        }
+
+        if !email.contains("@") || !email.contains(".") {
+            return "Enter a valid email address"
+        }
 
         return nil
     }
@@ -334,7 +454,7 @@ struct PaymentView: View {
             bookedSeatId: bookedSeatId,
             seats: seats,
             customerId: customerId,
-            price: totalPrice
+            price: finalPrice
         )
         
         isProcessing = false
