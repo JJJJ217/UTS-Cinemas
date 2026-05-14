@@ -36,12 +36,7 @@ struct HomePageView: View {
                         
                         HStack {
                             Spacer()
-                            Button {
-                                let email = "support@utscinemas.com"
-                                if let url = URL(string: "mailto:\(email)") {
-                                    UIApplication.shared.open(url)
-                                }
-                            } label: {
+                            NavigationLink(destination: SupportView()) {
                                 Image(systemName: "envelope.fill")
                             }
                             .buttonStyle(.borderedProminent)

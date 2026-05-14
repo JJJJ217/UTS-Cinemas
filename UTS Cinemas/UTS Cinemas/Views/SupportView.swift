@@ -1,3 +1,12 @@
+//
+//  SupportView.swift
+//  UTS Cinemas
+//
+//  Created by Jiaming Huang on 14/5/2026.
+//
+
+import SwiftUI
+
 struct SupportView: View {
     var body: some View {
         VStack(spacing: 20) {
@@ -12,7 +21,7 @@ struct SupportView: View {
                 .font(.title)
                 .bold()
             
-            Text("If you have any questions or need assistance, please feel free to email our customer support team at:")
+            Text("If you have any questions or need assistance, please email our customer support team at:")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
@@ -31,6 +40,9 @@ struct SupportView: View {
             
             Spacer()
         }
-        .navigationTitle("Support")
-        .navigationBarTitleDisplayMode(.inline)
     }
+}
+
+#Preview {
+    SupportView()
+}
