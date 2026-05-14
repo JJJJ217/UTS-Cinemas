@@ -9,6 +9,7 @@ import Foundation
 
 struct Movie: Identifiable, Hashable, Codable {
     var id = UUID()
+    var tmdbId: Int? = nil  // Optional TMDB ID for API movies
     var title: String
     var genre: String
     var durationMinutes: Int
@@ -18,6 +19,7 @@ struct Movie: Identifiable, Hashable, Codable {
     var location: String
     var showtime: Date = Date()
     var trailerURL: String = ""
+    var isFromTMDB: Bool = false  // Flag to indicate if movie is from TMDB
 }
 
 struct Cinema: Identifiable, Hashable, Codable {
@@ -47,11 +49,16 @@ enum ContentRating: String, Codable, Hashable {
 // Helper to determine if a movie is now showing or upcoming
 extension Movie {
     static var now: Date { Date() }
+    
+    var endTime: Date {
+        showtime.addingTimeInterval(Double(durationMinutes) * 60)
+    }
+    
     var isExpired: Bool {
-        showtime < Self.now
+        endTime < Self.now
     }
     var isValidShowtime: Bool {
-        showtime >= Self.now
+        endTime >= Self.now
     }
     var isNowShowing: Bool {
         let cutoff = Calendar.current.date(byAdding: .day, value: 30, to: Self.now)!

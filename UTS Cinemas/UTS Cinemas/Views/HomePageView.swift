@@ -60,12 +60,12 @@ struct HomePageView: View {
 
                     // Local admin-created movies
                     if !nowShowingMovies.isEmpty {
-                        moviesSection(title: "Now Showing (Local)", movies: nowShowingMovies)
+                        moviesSection(title: "Other Movies", movies: nowShowingMovies)
                             .padding(.bottom, 12)
                     }
 
                     if !upcomingMovies.isEmpty {
-                        moviesSection(title: "Upcoming (Local)", movies: upcomingMovies)
+                        moviesSection(title: "Other Upcoming", movies: upcomingMovies)
                             .padding(.bottom, 12)
                     }
 
@@ -82,7 +82,7 @@ struct HomePageView: View {
                 MovieEditView()
             }
             .sheet(item: $movieToEdit) { movie in
-                MovieEditView()
+                MovieEditView(movieToEdit: movie)
             }
             .sheet(isPresented: $showBookingSheet) {
                 BookingEditView(bookingToEdit: bookingToEdit)
