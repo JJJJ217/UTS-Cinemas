@@ -61,6 +61,11 @@ struct MovieEditView: View {
                 Section("Cinema Details") {
                     TextField("Cinema Location", text: $location)
                     DatePicker("Showtime", selection: $showtime)
+                    if showtime < Date().addingTimeInterval(24 * 3600) {
+                        Text("Showtime must be at least 24 hours from now")
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
                 }
                 
                 Section("Media & Plot") {
@@ -94,7 +99,7 @@ struct MovieEditView: View {
                     Button("Save") {
                         saveMovie()
                     }
-                    .disabled(title.isEmpty)
+                    .disabled(title.isEmpty || showtime < Date().addingTimeInterval(24 * 3600))
                 }
             }
         }
