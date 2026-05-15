@@ -262,11 +262,21 @@ struct HomePageView: View {
                 .fill(.gray.opacity(0.3))
                 .frame(width: 140, height: 200)
                 .overlay(
-                    Image(movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 140, height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    Group {
+                        if movie.posterImageName.lowercased().hasPrefix("http") {
+                            AsyncImage(url: URL(string: movie.posterImageName)) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                ProgressView()
+                            }
+                        } else {
+                            Image(movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
+                                .resizable()
+                                .scaledToFill()
+                        }
+                    }
+                    .frame(width: 140, height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 )
             
             // Movie title

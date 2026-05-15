@@ -13,11 +13,22 @@ struct LocalMovieDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Image(movie.posterImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .cornerRadius(20)
-                    .shadow(radius: 10)
+                Group {
+                    if movie.posterImageName.lowercased().hasPrefix("http") {
+                        AsyncImage(url: URL(string: movie.posterImageName)) { image in
+                            image.resizable().scaledToFit()
+                        } placeholder: {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, idealHeight: 300)
+                        }
+                    } else {
+                        Image(movie.posterImageName.isEmpty ? "film" : movie.posterImageName)
+                            .resizable()
+                            .scaledToFit()
+                    }
+                }
+                .cornerRadius(20)
+                .shadow(radius: 10)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(movie.title)

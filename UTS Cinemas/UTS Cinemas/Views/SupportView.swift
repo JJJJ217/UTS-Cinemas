@@ -21,7 +21,7 @@ struct SupportView: View {
                 .font(.title)
                 .bold()
             
-            Text("If you have any questions or need assistance, please email our customer support team at:")
+            Text("If you would like to request to add a movie or have any questions, please email our customer support team at:")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)

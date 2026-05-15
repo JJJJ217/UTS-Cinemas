@@ -69,7 +69,7 @@ struct MovieEditView: View {
                 }
                 
                 Section("Media & Plot") {
-                    TextField("Poster Image Name", text: $posterName)
+                    TextField("Poster Image URL (consist with HTTP)", text: $posterName)
                     TextField("Trailer URL", text: $trailerURL)
                     TextField("Description", text: $description, axis: .vertical)
                         .lineLimit(3...5)
